@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>12-Month Fishing Tackle &amp; Lure Spend</title>
+  <!-- Load Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Load Chart.js for interactive spend visualizations -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <!-- Load Inter font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+          },
+          colors: {
+            lake: {
+              50: '#f0f7f6',
+              100: '#d8ece9',
+              200: '#b5d9d4',
+              600: '#1b5e5a',
+              700: '#154b48',
+              800: '#123d3b',
+              900: '#0f3231',
+            },
+            reed: {
+              50: '#f5f7f2',
+              100: '#e7ede0',
+              600: '#4a6b3c',
+            },
+            lure: {
+              500: '#d97706',
+              600: '#b45309',
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    /* Subtle custom scrollbar and smooth transitions for outdoor/lure aesthetic */
+    body {
+      background: linear-gradient(180deg, #eef4f2 0%, #f7f9f7 48%, #ffffff 100%);
+      color: #0f2423;
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(18, 61, 59, 0.1);
+    }
+    .sort-indicator {
+      display: inline-block;
+      margin-left: 0.35rem;
+      opacity: 0.55;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+    th.active-sort .sort-indicator {
+      opacity: 1;
+      color: #1b5e5a;
+    }
+  </style>
+</head>
+<body class="min-h-screen antialiased selection:bg-lake-100 selection:text-lake-900">
+  <!-- Top Outdoor Navigation / Share Banner -->
+  <header class="border-b border-lake-900/10 bg-lake-900 text-white">
+    <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <div class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold tracking-wide text-lake-100 uppercase">
+            <!-- Inline SVG Lure/Hook Badge -->
+            <svg class="h-4 w-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 3a3 3 0 1 0 0 6v7a4 4 0 0 1-8 0v-2" />
+              <path d="M12 9c3.5 0 6 2 6 5" />
+              <circle cx="12" cy="3" r="1.5" />
+            </svg>
+            Obee's Tackle &amp; Lure Log &bull; Dec 8, 2025 – Oct 29, 2026
+          </div>
+          <h1 class="mt-3 text-2xl font-extrabold tracking-tight sm:text-3xl lg:text-4xl">
+            12-Month Fishing Tackle &amp; Lure Spend
+          </h1>
+          <p class="mt-1.5 max-w-3xl text-sm text-lake-100/90 sm:text-base">
+            A shareable breakdown of lures, soft plastics, chatterbaits, terminal tackle, and rod gear across 20 orders and store visits.
+          </p>
+        </div>
+
+        <!-- Share & Copy Action Controls -->
+        <div class="flex flex-wrap items-center gap-2.5 self-start md:self-center">
+          <button
+            id="copySummaryBtn"
+            type="button"
+            class="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-300 active:scale-[0.99]"
+          >
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+              <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+            </svg>
+            <span id="copyBtnText">Copy Friend Summary</span>
+          </button>
+          <button
+            id="resetFiltersBtn"
+            type="button"
+            class="inline-flex items-center gap-1.5 rounded-xl border border-white/20 bg-white/10 px-3.5 py-2.5 text-sm font-medium text-white transition hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/40"
+          >
+            Reset View
+          </button>
+        </div>
+      </div>
+
+      <!-- Status Toast / Message Banner (replaces alert()) -->
+      <div id="statusBanner" class="mt-3 hidden rounded-xl border border-emerald-300/40 bg-emerald-950/80 px-4 py-2.5 text-sm text-emerald-100" role="status" aria-live="polite">
+        <span id="statusBannerText"></span>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
+    <!-- Top KPI Summary Cards -->
+    <section aria-label="Spend Overview Cards" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <!-- Card 1: Total Spend -->
+      <div class="glass-card rounded-2xl p-5 shadow-sm">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold tracking-wider text-slate-500 uppercase">Total 12-Month Spend</span>
+          <span class="rounded-lg bg-lake-100 p-2 text-lake-700">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <line x1="12" y1="2" x2="12" y2="22" />
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg>
+          </span>
+        </div>
+        <p id="kpiTotalSpend" class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900">$945.19</p>
+        <p id="kpiTotalSub" class="mt-1 text-xs text-slate-600">Across 20 orders &amp; visits (6 retailers)</p>
+      </div>
+
+      <!-- Card 2: Orders & Visits -->
+      <div class="glass-card rounded-2xl p-5 shadow-sm">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold tracking-wider text-slate-500 uppercase">Orders &amp; Visits</span>
+          <span class="rounded-lg bg-reed-100 p-2 text-reed-600">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+              <path d="M3 6h18" />
+              <path d="M16 10a4 4 0 0 1-8 0" />
+            </svg>
+          </span>
+        </div>
+        <p id="kpiOrderCount" class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900">20</p>
+        <p class="mt-1 text-xs text-slate-600">Dec 8, 2025 to Oct 29, 2026</p>
+      </div>
+
+      <!-- Card 3: Average Order Value -->
+      <div class="glass-card rounded-2xl p-5 shadow-sm">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold tracking-wider text-slate-500 uppercase">Average Per Order</span>
+          <span class="rounded-lg bg-amber-100 p-2 text-amber-700">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M3 3v18h18" />
+              <path d="m19 9-5 5-4-4-3 3" />
+            </svg>
+          </span>
+        </div>
+        <p id="kpiAvgOrder" class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900">$47.26</p>
+        <p class="mt-1 text-xs text-slate-600">Mean spend per logged purchase</p>
+      </div>
+
+      <!-- Card 4: Top Retailer -->
+      <div class="glass-card rounded-2xl p-5 shadow-sm">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold tracking-wider text-slate-500 uppercase">Top Retailer</span>
+          <span class="rounded-lg bg-sky-100 p-2 text-sky-700">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+          </span>
+        </div>
+        <p id="kpiTopRetailer" class="mt-2 text-2xl font-extrabold tracking-tight text-slate-900">Walmart</p>
+        <p id="kpiTopRetailerSub" class="mt-1 text-xs text-slate-600">$284.22 across 5 orders (31.9%)</p>
+      </div>
+    </section>
+
+    <!-- Interactive Retailer Filter Bar -->
+    <section aria-label="Retailer Filters" class="glass-card rounded-2xl p-4 shadow-sm sm:p-5">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 class="text-sm font-bold tracking-wide text-slate-800 uppercase">Filter by Retailer</h2>
+          <p class="text-xs text-slate-500">Click a retailer pill to filter the chart, retailer breakdown, and order log.</p>
+        </div>
+        <div id="retailerFilterBar" class="flex flex-wrap gap-2">
+          <!-- Populated dynamically via JavaScript -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Chart & Retailer Breakdown Grid -->
+    <section class="grid grid-cols-1 gap-6 lg:grid-cols-12">
+      <!-- Chart Panel (7 cols on desktop) -->
+      <div class="glass-card flex flex-col justify-between rounded-2xl p-5 shadow-sm sm:p-6 lg:col-span-7">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900">Spend by Retailer &amp; Timeline</h2>
+            <p class="text-xs text-slate-500">Switch chart modes to inspect retailer totals or chronological order spend.</p>
+          </div>
+          <div class="inline-flex rounded-xl border border-slate-200 bg-slate-100 p-1 text-xs font-semibold">
+            <button
+              id="modeRetailerBtn"
+              type="button"
+              class="rounded-lg bg-white px-3 py-1.5 text-lake-800 shadow-sm transition"
+            >
+              By Retailer
+            </button>
+            <button
+              id="modeTimelineBtn"
+              type="button"
+              class="rounded-lg px-3 py-1.5 text-slate-600 transition hover:text-slate-900"
+            >
+              Chronological
+            </button>
+          </div>
+        </div>
+
+        <div class="relative mt-5 h-72 w-full sm:h-80">
+          <canvas id="spendChart" aria-label="Interactive Fishing Tackle Spend Chart"></canvas>
+        </div>
+
+        <div id="chartCaption" class="mt-4 rounded-xl bg-lake-50 px-3.5 py-2.5 text-xs text-lake-900">
+          Hover or tap any bar to see exact dollar totals, order counts, and share of spend.
+        </div>
+      </div>
+
+      <!-- Retailer Breakdown Cards (5 cols on desktop) -->
+      <div class="glass-card rounded-2xl p-5 shadow-sm sm:p-6 lg:col-span-5">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900">Retailer Scorecard</h2>
+            <p class="text-xs text-slate-500">Share of total tackle &amp; lure spend</p>
+          </div>
+          <span class="rounded-full bg-lake-100 px-2.5 py-1 text-xs font-semibold text-lake-800">6 Shops</span>
+        </div>
+
+        <div id="retailerBreakdownList" class="mt-4 space-y-3.5">
+          <!-- Populated dynamically via JavaScript -->
+        </div>
+      </div>
+    </section>
+
+    <!-- New Interactive Lure & Tackle Type Breakdown Section -->
+    <section id="lureTypeSection" aria-label="Lure and Tackle Type Breakdown" class="glass-card rounded-2xl p-5 shadow-sm sm:p-6">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900">Lure &amp; Tackle Type Breakdown</h2>
+          <p class="text-xs text-slate-500">
+            Categorized from logged order items into ChatterBaits, soft plastics, panfish baits, hardbaits/topwater, and rods/line/terminal &amp; mixed orders.
+          </p>
+        </div>
+        <div class="inline-flex rounded-xl border border-slate-200 bg-slate-100 p-1 text-xs font-semibold">
+          <button
+            id="lureModeDoughnutBtn"
+            type="button"
+            class="rounded-lg px-3 py-1.5 text-slate-600 transition hover:text-slate-900"
+          >
+            Doughnut
+          </button>
+          <button
+            id="lureModeBarBtn"
+            type="button"
+            class="rounded-lg bg-white px-3 py-1.5 text-lake-800 shadow-sm transition"
+          >
+            Bar
+          </button>
+        </div>
+      </div>
+
+      <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <!-- Left: Interactive Chart.js Category Chart -->
+        <div class="flex flex-col justify-between rounded-xl border border-slate-200/80 bg-white/80 p-4 lg:col-span-5">
+          <div class="relative h-64 w-full sm:h-72">
+            <canvas id="lureTypeChart" aria-label="Lure and Tackle Type Chart"></canvas>
+          </div>
+          <p id="lureChartCaption" class="mt-3 rounded-lg bg-lake-50 px-3 py-2 text-xs text-lake-900">
+            Bar view: compares dollar spend across lure and tackle types. Click a category card or row to filter the log.
+          </p>
+        </div>
+
+        <!-- Right: Category Summary Cards & Table -->
+        <div class="space-y-4 lg:col-span-7">
+          <div id="lureCategoryCards" class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <!-- Populated dynamically via JavaScript -->
+          </div>
+
+          <div class="overflow-x-auto rounded-xl border border-slate-200/80">
+            <table class="min-w-full divide-y divide-slate-200 text-left text-xs sm:text-sm">
+              <thead class="bg-slate-50/90 text-xs font-semibold tracking-wider text-slate-600 uppercase">
+                <tr>
+                  <th scope="col" class="px-4 py-2.5">Lure / Tackle Type</th>
+                  <th scope="col" class="px-4 py-2.5">Notable Items Logged</th>
+                  <th scope="col" class="px-4 py-2.5 text-right">Entries</th>
+                  <th scope="col" class="px-4 py-2.5 text-right">Spend</th>
+                  <th scope="col" class="px-4 py-2.5 text-right">Share</th>
+                </tr>
+              </thead>
+              <tbody id="lureCategoryTableBody" class="divide-y divide-slate-100 bg-white">
+                <!-- Populated dynamically via JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Searchable & Sortable Order Log Table -->
+    <section class="glass-card rounded-2xl p-5 shadow-sm sm:p-6" aria-label="Order History Table">
+      <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900">Complete Order &amp; Visit Log</h2>
+          <p id="tableCountLabel" class="text-xs text-slate-500">Showing 20 of 20 entries</p>
+        </div>
+
+        <!-- Search Input -->
+        <div class="relative w-full md:w-80">
+          <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+          </span>
+          <input
+            id="orderSearchInput"
+            type="search"
+            placeholder="Search lures, order #, retailer..."
+            aria-label="Search orders by item, order number, or retailer"
+            class="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-slate-800 placeholder-slate-400 shadow-xs transition focus:border-lake-600 focus:outline-none focus:ring-2 focus:ring-lake-600/20"
+          />
+        </div>
+      </div>
+
+      <!-- Responsive Table Wrapper -->
+      <div class="mt-5 overflow-x-auto rounded-xl border border-slate-200/80">
+        <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
+          <thead class="bg-slate-50/90 text-xs font-semibold tracking-wider text-slate-600 uppercase">
+            <tr>
+              <th scope="col" data-sort="date" class="sortable-th cursor-pointer select-none px-4 py-3 hover:bg-slate-100">
+                Date <span class="sort-indicator">↕</span>
+              </th>
+              <th scope="col" data-sort="retailer" class="sortable-th cursor-pointer select-none px-4 py-3 hover:bg-slate-100">
+                Retailer <span class="sort-indicator">↕</span>
+              </th>
+              <th scope="col" data-sort="orderId" class="sortable-th cursor-pointer select-none px-4 py-3 hover:bg-slate-100">
+                Order / Visit <span class="sort-indicator">↕</span>
+              </th>
+              <th scope="col" data-sort="items" class="sortable-th cursor-pointer select-none px-4 py-3 hover:bg-slate-100">
+                Tackle &amp; Gear Notes <span class="sort-indicator">↕</span>
+              </th>
+              <th scope="col" data-sort="amount" class="sortable-th cursor-pointer select-none px-4 py-3 text-right hover:bg-slate-100">
+                Amount <span class="sort-indicator">↕</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody id="ordersTableBody" class="divide-y divide-slate-100 bg-white">
+            <!-- Rows rendered dynamically -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Empty State when search/filter matches zero rows -->
+      <div id="emptyState" class="hidden rounded-xl border border-dashed border-slate-300 bg-slate-50/60 py-10 text-center">
+        <p class="text-sm font-semibold text-slate-700">No matching tackle orders found</p>
+        <p class="mt-1 text-xs text-slate-500">Try clearing your search filter or selecting "All Retailers".</p>
+      </div>
+
+      <!-- Footnote on mixed order -->
+      <p class="mt-4 text-xs text-slate-500">
+        Note: Walmart Order #2000141-33440189 ($63.76 on Dec 28, 2025) includes a Creme Fishin' Favorites lure kit alongside household items on the same receipt.
+      </p>
+    </section>
+  </main>
+
+  <footer class="mt-8 border-t border-slate-200/80 bg-white/80 py-6">
+    <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 text-xs text-slate-500 sm:flex-row sm:px-6 lg:px-8">
+      <span>12-Month Fishing Tackle &amp; Lure Spend &bull; Prepared for sharing with friends</span>
+      <span>20 orders &amp; store visits &bull; $945.19 total</span>
+    </div>
+  </footer>
+
+  <script>
+    // Complete dataset of Obee's 20 tackle/lure orders and store visits (Dec 8, 2025 – Oct 29, 2026)
+    const ORDERS_DATA = [
+      {
+        id: 'tw-10973261',
+        date: '2025-12-08',
+        dateLabel: 'Dec 8, 2025',
+        retailer: 'Tackle Warehouse',
+        orderId: 'Order #10973261',
+        items: 'Hooks & Senkos (Owner Weedless Sniper Finesse Neko Hooks, Yama 3" Senkos)',
+        amount: 26.70,
+        color: '#0f766e',
+        lureCategory: 'Soft Plastics & GrubZ'
+      },
+      {
+        id: 'tw-10983655',
+        date: '2025-12-12',
+        dateLabel: 'Dec 12, 2025',
+        retailer: 'Tackle Warehouse',
+        orderId: 'Order #10983655',
+        items: 'Daiwa Tatula XT Rod (6\'5" Light BF Casting Rod)',
+        amount: 107.99,
+        color: '#0f766e',
+        lureCategory: 'Rods, Line & Terminal Tackle'
+      },
+      {
+        id: 'wm-2000141',
+        date: '2025-12-28',
+        dateLabel: 'Dec 28, 2025',
+        retailer: 'Walmart',
+        orderId: 'Order #2000141-33440189',
+        items: 'Creme Lure Kit + Household (4-pack Creme Fishin\' Favorites lipless lures + household items)',
+        amount: 63.76,
+        color: '#2563eb',
+        lureCategory: 'Hardbaits & Topwater'
+      },
+      {
+        id: 'tw-11029647',
+        date: '2025-12-30',
+        dateLabel: 'Dec 30, 2025',
+        retailer: 'Tackle Warehouse',
+        orderId: 'Order #11029647',
+        items: 'Line & Lures (Power Pro Spectra 10lb braid, Strike King Bitsy Splash & Bitsy Dawg)',
+        amount: 47.26,
+        color: '#0f766e',
+        lureCategory: 'Hardbaits & Topwater'
+      },
+      {
+        id: 'bps-w273449283',
+        date: '2026-01-26',
+        dateLabel: 'Jan 26, 2026',
+        retailer: 'Bass Pro Shops',
+        orderId: 'Order #W273449283',
+        items: 'Bass Pro XPS Single Tail Grubs, lead worm weights, round jigheads, Berkley PowerBait MaxScent Flat Worms',
+        amount: 56.89,
+        color: '#d97706',
+        lureCategory: 'Soft Plastics & GrubZ'
+      },
+      {
+        id: 'bps-w274192048',
+        date: '2026-02-09',
+        dateLabel: 'Feb 9, 2026',
+        retailer: 'Bass Pro Shops',
+        orderId: 'Order #W274192048',
+        items: 'Bass Pro Crappie Spin, Strike King Mini-King Spinnerbaits, Creme Spoiler Spins, PowerBait Power Grub',
+        amount: 31.20,
+        color: '#d97706',
+        lureCategory: 'Crappie & Panfish Baits'
+      },
+      {
+        id: 'amz-113-0886219',
+        date: '2026-02-10',
+        dateLabel: 'Feb 10, 2026',
+        retailer: 'Amazon',
+        orderId: 'Order #113-0886219-8853864',
+        items: 'Booms Fishing B0T Microfiber Fishing Towels (3-pack Black) + 8-pc Shower Curtain Weights',
+        amount: 22.49,
+        color: '#e11d48',
+        lureCategory: 'Rods, Line & Terminal Tackle'
+      },
+      {
+        id: 'bps-w274406871',
+        date: '2026-02-15',
+        dateLabel: 'Feb 15, 2026',
+        retailer: 'Bass Pro Shops',
+        orderId: 'Order #W274406871',
+        items: 'Berkley PowerBait MaxScent Flat Worms (x3), Bass Pro XPS SuperLock Hooks (x2)',
+        amount: 46.02,
+        color: '#d97706',
+        lureCategory: 'Soft Plastics & GrubZ'
+      },
+      {
+        id: 'bps-katy-visit',
+        date: '2026-03-01',
+        dateLabel: 'Mar 1, 2026',
+        retailer: 'Bass Pro Shops',
+        orderId: 'Katy Store Visit',
+        items: 'In-store tackle & gear visit at Bass Pro Shops Katy',
+        amount: 54.60,
+        color: '#d97706',
+        lureCategory: 'Rods, Line & Terminal Tackle'
+      },
+      {
+        id: 'tw-11292776',
+        date: '2026-04-10',
+        dateLabel: 'Apr 10, 2026',
+        retailer: 'Tackle Warehouse',
+        orderId: 'Order #11292776',
+        items: 'Terminal Tackle & Senkos (Top Brass Peg-It 2, Decoy Worm 220, Yama 3" Senko Black)',
+        amount: 38.34,
+        color: '#0f766e',
+        lureCategory: 'Rods, Line & Terminal Tackle'
+      },
+      {
+        id: 'zman-43585',
+        date: '2026-04-11',
+        dateLabel: 'Apr 11, 2026',
+        retailer: 'Z-Man Fishing Products',
+        orderId: 'Order #43585',
+        items: 'GrubZ & ChatterBait Micros (2x GrubZ 2" Shimmer Pearl, 8x ChatterBait Micro 1/8 oz Blue/Black & White)',
+        amount: 59.84,
+        color: '#4d7c0f',
+        lureCategory: 'Bladed Jigs / ChatterBaits'
+      },
+      {
+        id: 'bps-w277596790',
+        date: '2026-04-12',
+        dateLabel: 'Apr 12, 2026',
+        retailer: 'Bass Pro Shops',
+        orderId: 'Order #W277596790',
+        items: 'Z-Man Chatterbait MiniMax Compact Bladed Jigs (Pearl Ghost & Black Blue)',
+        amount: 21.63,
+        color: '#d97706',
+        lureCategory: 'Bladed Jigs / ChatterBaits'
+      },
+      {
+        id: 'amz-113-3584783',
+        date: '2026-04-03',
+        dateLabel: 'Apr 3, 2026',
+        retailer: 'Amazon',
+        orderId: 'Order #113-3584783-3673032',
+        items: 'Seaguar Blue Label 100% Fluorocarbon Line (10lb, 50yd) & Reaction Tackle Carolina Rig Barrel Sinkers (1/8 oz, 6-pack)',
+        amount: 30.82,
+        color: '#e11d48',
+        lureCategory: 'Rods, Line & Terminal Tackle'
+      },
+      {
+        id: 'wm-2000145',
+        date: '2026-04-14',
+        dateLabel: 'Apr 14, 2026',
+        retailer: 'Walmart',
+        orderId: 'Order #2000145-46849247',
+        items: '5x Z-Man Chatterbait Mini/Micro (2-packs in Silver Natural, Gold Black, White)',
+        amount: 44.75,
+        color: '#2563eb',
+        lureCategory: 'Bladed Jigs / ChatterBaits'
+      },
+      {
+        id: 'bps-w277979621',
+        date: '2026-04-28',
+        dateLabel: 'Apr 28, 2026',
+        retailer: 'Bass Pro Shops',
+        orderId: 'Order #W277979621',
+        items: 'Z-Man Minnowz 3" (The Deal & Redbone), Johnny Morris Bio Bait Crappie Craze Minnows',
+        amount: 24.42,
+        color: '#d97706',
+        lureCategory: 'Crappie & Panfish Baits'
+      },
+      {
+        id: 'wm-2000147',
+        date: '2026-05-07',
+        dateLabel: 'May 7, 2026',
+        retailer: 'Walmart',
+        orderId: 'Order #2000147-75586459',
+        items: '4x Z-Man Chatterbait Mini (2-packs, 1/8 oz Gold Black & Silver Natural)',
+        amount: 37.93,
+        color: '#2563eb',
+        lureCategory: 'Bladed Jigs / ChatterBaits'
+      },
+      {
+        id: 'wm-2000148',
+        date: '2026-05-30',
+        dateLabel: 'May 30, 2026',
+        retailer: 'Walmart',
+        orderId: 'Order #2000148-78759446',
+        items: 'Bobby Garland & MaxScent (Baby Shad Cajun Cricket & Blue Thunder Swim\'R, PowerBait MaxScent Lil\' Super Trooper + items)',
+        amount: 80.88,
+        color: '#2563eb',
+        lureCategory: 'Crappie & Panfish Baits'
+      },
+      {
+        id: 'bps-w279478233',
+        date: '2026-05-30',
+        dateLabel: 'May 30, 2026',
+        retailer: 'Bass Pro Shops',
+        orderId: 'Order #W279478233',
+        items: 'Johnny Morris Bio Bait Crappie Craze Minnows (x2), PowerBait The Champ Minnow, Bass Pro Go-To Firetail Grubs (x2) (Points)',
+        amount: 33.29,
+        color: '#d97706',
+        lureCategory: 'Crappie & Panfish Baits'
+      },
+      {
+        id: 'wm-2000152',
+        date: '2026-10-21',
+        dateLabel: 'Oct 21, 2026',
+        retailer: 'Walmart',
+        orderId: 'Order #2000152-57845719',
+        items: '6x Z-Man Chatterbait Mini (2-packs, 1/8 oz Silver Natural & Gold Black)',
+        amount: 56.90,
+        color: '#2563eb',
+        lureCategory: 'Bladed Jigs / ChatterBaits'
+      },
+      {
+        id: 'fishusa-1819186',
+        date: '2026-10-29',
+        dateLabel: 'Oct 29, 2026',
+        retailer: 'FishUSA',
+        orderId: 'Order #1819186',
+        items: '12x Z-Man Micro Finesse ChatterBaits (8x 1/8 oz & 4x 1/16 oz across Blue Glimmer Sparkle, Dark N Stormy, Firetreuse, Space Guppy)',
+        amount: 59.27,
+        color: '#7c3aed',
+        lureCategory: 'Bladed Jigs / ChatterBaits'
+      }
+    ];
+
+    const RETAILER_META = [
+      { name: 'Walmart', color: '#2563eb', badgeClass: 'bg-blue-50 text-blue-700 border-blue-200' },
+      { name: 'Bass Pro Shops', color: '#d97706', badgeClass: 'bg-amber-50 text-amber-800 border-amber-200' },
+      { name: 'Tackle Warehouse', color: '#0f766e', badgeClass: 'bg-teal-50 text-teal-800 border-teal-200' },
+      { name: 'Z-Man Fishing Products', color: '#4d7c0f', badgeClass: 'bg-lime-50 text-lime-800 border-lime-200' },
+      { name: 'FishUSA', color: '#7c3aed', badgeClass: 'bg-violet-50 text-violet-800 border-violet-200' },
+      { name: 'Amazon', color: '#e11d48', badgeClass: 'bg-rose-50 text-rose-800 border-rose-200' }
+    ];
+
+    // Five lure & tackle categories requested for breakdown
+    const LURE_CATEGORIES = [
+      {
+        name: 'Bladed Jigs / ChatterBaits',
+        color: '#1b5e5a',
+        highlight: 'Z-Man ChatterBait Micro, Micro Finesse (1/8 & 1/16 oz), MiniMax, Flashback Mini'
+      },
+      {
+        name: 'Soft Plastics & GrubZ',
+        color: '#4d7c0f',
+        highlight: 'Z-Man GrubZ 2" Shimmer Pearl, PowerBait MaxScent, Yama 3" Senko, Decoy Worm 220'
+      },
+      {
+        name: 'Crappie & Panfish Baits',
+        color: '#d97706',
+        highlight: 'Bobby Garland Baby Shad (Cajun Cricket & Blue Thunder Swim\'R), Bio Bait & Minnowz'
+      },
+      {
+        name: 'Hardbaits & Topwater',
+        color: '#2563eb',
+        highlight: 'Creme Fishin\' Favorites Lipless Kit, Strike King Bitsy Splash & Bitsy Dawg'
+      },
+      {
+        name: 'Rods, Line & Terminal Tackle',
+        color: '#7c3aed',
+        highlight: 'Daiwa Tatula XT 6\'5" Light BF rod, Power Pro 10lb braid, Peg-It 2 & mixed orders'
+      }
+    ];
+
+    // Application state
+    const state = {
+      selectedRetailer: 'ALL',
+      selectedLureCategory: 'ALL',
+      searchQuery: '',
+      sortKey: 'date',
+      sortAsc: true,
+      chartMode: 'retailer', // 'retailer' or 'timeline'
+      lureChartMode: 'bar' // 'bar' or 'doughnut'
+    };
+
+    let spendChartInstance = null;
+    let lureTypeChartInstance = null;
+
+    function formatUSD(amount) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(amount);
+    }
+
+    function showBanner(message) {
+      const banner = document.getElementById('statusBanner');
+      const textEl = document.getElementById('statusBannerText');
+      if (!banner || !textEl) return;
+      textEl.textContent = message;
+      banner.classList.remove('hidden');
+      clearTimeout(window.__bannerTimer);
+      window.__bannerTimer = setTimeout(() => {
+        banner.classList.add('hidden');
+      }, 3600);
+    }
+
+    function getFilteredOrders() {
+      const q = state.searchQuery.trim().toLowerCase();
+      return ORDERS_DATA.filter((order) => {
+        const matchesRetailer = state.selectedRetailer === 'ALL' || order.retailer === state.selectedRetailer;
+        const matchesCategory =
+          state.selectedLureCategory === 'ALL' || order.lureCategory === state.selectedLureCategory;
+        const matchesQuery =
+          !q ||
+          order.retailer.toLowerCase().includes(q) ||
+          order.orderId.toLowerCase().includes(q) ||
+          order.items.toLowerCase().includes(q) ||
+          order.dateLabel.toLowerCase().includes(q) ||
+          order.lureCategory.toLowerCase().includes(q);
+        return matchesRetailer && matchesCategory && matchesQuery;
+      });
+    }
+
+    function getSortedOrders(orders) {
+      const copy = [...orders];
+      copy.sort((a, b) => {
+        let cmp = 0;
+        if (state.sortKey === 'amount') {
+          cmp = a.amount - b.amount;
+        } else if (state.sortKey === 'date') {
+          cmp = a.date.localeCompare(b.date);
+        } else if (state.sortKey === 'retailer') {
+          cmp = a.retailer.localeCompare(b.retailer);
+        } else if (state.sortKey === 'orderId') {
+          cmp = a.orderId.localeCompare(b.orderId);
+        } else if (state.sortKey === 'items') {
+          cmp = a.items.localeCompare(b.items);
+        }
+        return state.sortAsc ? cmp : -cmp;
+      });
+      return copy;
+    }
+
+    function renderFilterButtons() {
+      const container = document.getElementById('retailerFilterBar');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const allBtn = document.createElement('button');
+      allBtn.type = 'button';
+      const isAll = state.selectedRetailer === 'ALL';
+      allBtn.className = `rounded-xl px-3.5 py-2 text-xs font-semibold transition border ${
+        isAll
+          ? 'bg-lake-800 text-white border-lake-800 shadow-xs'
+          : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+      }`;
+      allBtn.textContent = `All Retailers (${ORDERS_DATA.length})`;
+      allBtn.addEventListener('click', () => {
+        state.selectedRetailer = 'ALL';
+        updateAll();
+      });
+      container.appendChild(allBtn);
+
+      RETAILER_META.forEach((meta) => {
+        const count = ORDERS_DATA.filter((o) => o.retailer === meta.name).length;
+        const active = state.selectedRetailer === meta.name;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition border ${
+          active
+            ? 'bg-lake-800 text-white border-lake-800 shadow-xs'
+            : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+        }`;
+        btn.innerHTML = `<span class="h-2.5 w-2.5 rounded-full" style="background-color:${meta.color}"></span>${meta.name} (${count})`;
+        btn.addEventListener('click', () => {
+          state.selectedRetailer = state.selectedRetailer === meta.name ? 'ALL' : meta.name;
+          updateAll();
+        });
+        container.appendChild(btn);
+      });
+    }
+
+    function renderKPIs(filteredOrders) {
+      const total = filteredOrders.reduce((sum, o) => sum + o.amount, 0);
+      const count = filteredOrders.length;
+      const avg = count > 0 ? total / count : 0;
+
+      document.getElementById('kpiTotalSpend').textContent = formatUSD(total);
+      const activeFilters = [];
+      if (state.selectedRetailer !== 'ALL') activeFilters.push(state.selectedRetailer);
+      if (state.selectedLureCategory !== 'ALL') activeFilters.push(state.selectedLureCategory);
+      document.getElementById('kpiTotalSub').textContent =
+        activeFilters.length === 0
+          ? 'Across 20 orders & visits (6 retailers)'
+          : `Filtered: ${activeFilters.join(' • ')}`;
+      document.getElementById('kpiOrderCount').textContent = String(count);
+      document.getElementById('kpiAvgOrder').textContent = formatUSD(avg);
+
+      // Compute retailer totals across full dataset for top retailer KPI
+      const totalsByRetailer = RETAILER_META.map((m) => {
+        const subset = ORDERS_DATA.filter((o) => o.retailer === m.name);
+        const sum = subset.reduce((acc, item) => acc + item.amount, 0);
+        return { name: m.name, sum, count: subset.length };
+      }).sort((a, b) => b.sum - a.sum);
+
+      const grandTotal = ORDERS_DATA.reduce((s, o) => s + o.amount, 0);
+      const top = totalsByRetailer[0];
+      document.getElementById('kpiTopRetailer').textContent = top.name;
+      document.getElementById('kpiTopRetailerSub').textContent =
+        `${formatUSD(top.sum)} across ${top.count} orders (${((top.sum / grandTotal) * 100).toFixed(1)}%)`;
+    }
+
+    function renderRetailerBreakdown() {
+      const container = document.getElementById('retailerBreakdownList');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const grandTotal = ORDERS_DATA.reduce((s, o) => s + o.amount, 0);
+
+      RETAILER_META.forEach((meta) => {
+        const subset = ORDERS_DATA.filter((o) => o.retailer === meta.name);
+        const sum = subset.reduce((acc, item) => acc + item.amount, 0);
+        const pct = grandTotal > 0 ? (sum / grandTotal) * 100 : 0;
+        const isSelected = state.selectedRetailer === meta.name;
+
+        const card = document.createElement('div');
+        card.className = `cursor-pointer rounded-xl border p-3.5 transition ${
+          isSelected
+            ? 'border-lake-700 bg-lake-50/80 ring-2 ring-lake-600/20'
+            : 'border-slate-200/80 bg-white hover:border-slate-300 hover:bg-slate-50/60'
+        }`;
+        card.innerHTML = `
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="h-3 w-3 rounded-full shrink-0" style="background-color:${meta.color}"></span>
+              <span class="text-sm font-bold text-slate-900">${meta.name}</span>
+            </div>
+            <span class="text-sm font-extrabold text-slate-900">${formatUSD(sum)}</span>
+          </div>
+          <div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+            <div class="h-full rounded-full transition-all duration-300" style="width:${pct.toFixed(1)}%; background-color:${meta.color}"></div>
+          </div>
+          <div class="mt-1.5 flex items-center justify-between text-xs text-slate-500">
+            <span>${subset.length} ${subset.length === 1 ? 'order' : 'orders/visits'}</span>
+            <span>${pct.toFixed(1)}% of total</span>
+          </div>
+        `;
+        card.addEventListener('click', () => {
+          state.selectedRetailer = state.selectedRetailer === meta.name ? 'ALL' : meta.name;
+          updateAll();
+        });
+        container.appendChild(card);
+      });
+    }
+
+    function renderChart(filteredOrders) {
+      const canvas = document.getElementById('spendChart');
+      const caption = document.getElementById('chartCaption');
+      if (!canvas || typeof Chart === 'undefined') return;
+
+      const ctx = canvas.getContext('2d');
+      if (spendChartInstance) {
+        spendChartInstance.destroy();
+      }
+
+      try {
+        if (state.chartMode === 'retailer') {
+          const baseOrders =
+            state.selectedLureCategory === 'ALL'
+              ? ORDERS_DATA
+              : ORDERS_DATA.filter((o) => o.lureCategory === state.selectedLureCategory);
+
+          const activeMeta =
+            state.selectedRetailer === 'ALL'
+              ? RETAILER_META
+              : RETAILER_META.filter((m) => m.name === state.selectedRetailer);
+
+          const grouped = activeMeta
+            .map((meta) => {
+              const sum = baseOrders
+                .filter((o) => o.retailer === meta.name)
+                .reduce((acc, o) => acc + o.amount, 0);
+              return { name: meta.name, sum, color: meta.color };
+            })
+            .filter((g) => g.sum > 0 || state.selectedRetailer !== 'ALL');
+
+          const totalForMode = grouped.reduce((s, g) => s + g.sum, 0);
+          if (caption) {
+            caption.textContent = `Retailer bar view: ${formatUSD(totalForMode)} across ${grouped.length} ${
+              grouped.length === 1 ? 'retailer' : 'retailers'
+            }.`;
+          }
+
+          spendChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: grouped.map((g) => g.name),
+              datasets: [
+                {
+                  label: 'Spend ($)',
+                  data: grouped.map((g) => Number(g.sum.toFixed(2))),
+                  backgroundColor: grouped.map((g) => g.color),
+                  borderRadius: 8
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    label: (context) => {
+                      const val = Number(context.parsed.y || 0);
+                      const pct = totalForMode > 0 ? ((val / totalForMode) * 100).toFixed(1) : '0.0';
+                      return ` ${formatUSD(val)} (${pct}%)`;
+                    }
+                  }
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: { callback: (val) => `$${val}` },
+                  grid: { color: 'rgba(15, 36, 35, 0.06)' }
+                },
+                x: {
+                  grid: { display: false },
+                  ticks: { font: { size: 11 } }
+                }
+              }
+            }
+          });
+        } else {
+          const sortedTimeline = [...filteredOrders].sort((a, b) => a.date.localeCompare(b.date));
+          const totalTimeline = sortedTimeline.reduce((s, o) => s + o.amount, 0);
+          if (caption) {
+            caption.textContent = `Chronological view: ${sortedTimeline.length} ${
+              sortedTimeline.length === 1 ? 'entry' : 'entries'
+            } totaling ${formatUSD(totalTimeline)}.`;
+          }
+
+          spendChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: sortedTimeline.map((o) => o.dateLabel),
+              datasets: [
+                {
+                  label: 'Order Spend ($)',
+                  data: sortedTimeline.map((o) => Number(o.amount.toFixed(2))),
+                  backgroundColor: sortedTimeline.map((o) => o.color),
+                  borderRadius: 6
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    title: (items) => {
+                      const idx = items[0]?.dataIndex ?? 0;
+                      const entry = sortedTimeline[idx];
+                      return entry ? `${entry.dateLabel} — ${entry.retailer}` : '';
+                    },
+                    label: (context) => {
+                      const idx = context.dataIndex;
+                      const entry = sortedTimeline[idx];
+                      const val = Number(context.parsed.y || 0);
+                      return ` ${formatUSD(val)}${entry ? ` (${entry.orderId})` : ''}`;
+                    }
+                  }
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: { callback: (val) => `$${val}` },
+                  grid: { color: 'rgba(15, 36, 35, 0.06)' }
+                },
+                x: {
+                  ticks: { maxRotation: 40, minRotation: 25, font: { size: 10 } },
+                  grid: { display: false }
+                }
+              }
+            }
+          });
+        }
+      } catch (err) {
+        if (caption) {
+          caption.textContent = 'Unable to render spend chart at the moment.';
+        }
+      }
+    }
+
+    function renderLureTypeBreakdown(filteredOrders) {
+      const cardsContainer = document.getElementById('lureCategoryCards');
+      const tbody = document.getElementById('lureCategoryTableBody');
+      const canvas = document.getElementById('lureTypeChart');
+      const caption = document.getElementById('lureChartCaption');
+      if (!cardsContainer || !tbody || !canvas || typeof Chart === 'undefined') return;
+
+      const baseOrders =
+        state.selectedRetailer === 'ALL'
+          ? ORDERS_DATA
+          : ORDERS_DATA.filter((o) => o.retailer === state.selectedRetailer);
+      const baseTotal = baseOrders.reduce((s, o) => s + o.amount, 0);
+
+      const categoryStats = LURE_CATEGORIES.map((cat) => {
+        const matching = baseOrders.filter((o) => o.lureCategory === cat.name);
+        const sum = matching.reduce((acc, item) => acc + item.amount, 0);
+        const share = baseTotal > 0 ? (sum / baseTotal) * 100 : 0;
+        return {
+          ...cat,
+          count: matching.length,
+          sum,
+          share
+        };
+      });
+
+      // Render summary cards
+      cardsContainer.innerHTML = '';
+      categoryStats.forEach((stat) => {
+        const isActive = state.selectedLureCategory === stat.name;
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = `w-full rounded-xl border p-3.5 text-left transition ${
+          isActive
+            ? 'border-lake-700 bg-lake-50/90 ring-2 ring-lake-600/20'
+            : 'border-slate-200/80 bg-white hover:border-slate-300 hover:bg-slate-50/70'
+        }`;
+        card.innerHTML = `
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="mt-0.5 h-3 w-3 shrink-0 rounded-full" style="background-color:${stat.color}"></span>
+              <span class="text-xs font-bold text-slate-900 sm:text-sm">${stat.name}</span>
+            </div>
+            <span class="shrink-0 text-xs font-extrabold text-slate-900 sm:text-sm">${formatUSD(stat.sum)}</span>
+          </div>
+          <p class="mt-1.5 line-clamp-2 text-[11px] text-slate-500">${stat.highlight}</p>
+          <div class="mt-2 flex items-center justify-between text-[11px] font-medium text-slate-600">
+            <span>${stat.count} ${stat.count === 1 ? 'order' : 'orders'}</span>
+            <span>${stat.share.toFixed(1)}%</span>
+          </div>
+        `;
+        card.addEventListener('click', () => {
+          state.selectedLureCategory = state.selectedLureCategory === stat.name ? 'ALL' : stat.name;
+          updateAll();
+        });
+        cardsContainer.appendChild(card);
+      });
+
+      // Render category table rows
+      tbody.innerHTML = '';
+      categoryStats.forEach((stat) => {
+        const isActive = state.selectedLureCategory === stat.name;
+        const tr = document.createElement('tr');
+        tr.className = `cursor-pointer transition ${
+          isActive ? 'bg-lake-50/80 font-medium' : 'hover:bg-slate-50/80'
+        }`;
+        tr.innerHTML = `
+          <td class="whitespace-nowrap px-4 py-3 font-semibold text-slate-900">
+            <span class="mr-2 inline-block h-2.5 w-2.5 rounded-full" style="background-color:${stat.color}"></span>
+            ${stat.name}
+          </td>
+          <td class="px-4 py-3 text-xs text-slate-600">${stat.highlight}</td>
+          <td class="whitespace-nowrap px-4 py-3 text-right text-slate-700">${stat.count}</td>
+          <td class="whitespace-nowrap px-4 py-3 text-right font-bold text-slate-900">${formatUSD(stat.sum)}</td>
+          <td class="whitespace-nowrap px-4 py-3 text-right text-slate-700">${stat.share.toFixed(1)}%</td>
+        `;
+        tr.addEventListener('click', () => {
+          state.selectedLureCategory = state.selectedLureCategory === stat.name ? 'ALL' : stat.name;
+          updateAll();
+        });
+        tbody.appendChild(tr);
+      });
+
+      // Render Chart.js chart (doughnut or bar)
+      const ctx = canvas.getContext('2d');
+      if (lureTypeChartInstance) {
+        lureTypeChartInstance.destroy();
+      }
+
+      const labels = categoryStats.map((c) => c.name);
+      const values = categoryStats.map((c) => Number(c.sum.toFixed(2)));
+      const colors = categoryStats.map((c) => c.color);
+      const isDoughnut = state.lureChartMode === 'doughnut';
+
+      caption.textContent = isDoughnut
+        ? 'Doughnut view: shows each lure and tackle category share. Click a category card or row to filter the log.'
+        : 'Bar view: compares dollar spend across lure and tackle types. Click a category card or row to filter the log.';
+
+      lureTypeChartInstance = new Chart(ctx, {
+        type: isDoughnut ? 'doughnut' : 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Category Spend ($)',
+              data: values,
+              backgroundColor: colors,
+              borderColor: isDoughnut ? '#ffffff' : colors,
+              borderWidth: isDoughnut ? 2 : 0,
+              borderRadius: isDoughnut ? 0 : 8,
+              hoverOffset: isDoughnut ? 6 : 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: isDoughnut ? '58%' : undefined,
+          plugins: {
+            legend: {
+              display: isDoughnut,
+              position: 'bottom',
+              labels: {
+                boxWidth: 12,
+                padding: 12,
+                font: { size: 11 }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: (context) => {
+                  const val = isDoughnut ? context.parsed : context.parsed.y;
+                  const pct = baseTotal > 0 ? ((val / baseTotal) * 100).toFixed(1) : '0.0';
+                  return ` ${formatUSD(val)} (${pct}%)`;
+                }
+              }
+            }
+          },
+          scales: isDoughnut
+            ? {}
+            : {
+                y: {
+                  beginAtZero: true,
+                  ticks: { callback: (val) => `$${val}` },
+                  grid: { color: 'rgba(15, 36, 35, 0.06)' }
+                },
+                x: {
+                  ticks: {
+                    maxRotation: 35,
+                    minRotation: 20,
+                    font: { size: 10 }
+                  },
+                  grid: { display: false }
+                }
+              }
+        }
+      });
+
+      // Keep reference to filteredOrders so linter/clarity is complete
+      void filteredOrders;
+    }
+
+    function getRetailerBadgeClass(retailerName) {
+      const found = RETAILER_META.find((m) => m.name === retailerName);
+      return found ? found.badgeClass : 'bg-slate-100 text-slate-700 border-slate-200';
+    }
+
+    function renderTable(filteredOrders) {
+      const tbody = document.getElementById('ordersTableBody');
+      const emptyState = document.getElementById('emptyState');
+      const countLabel = document.getElementById('tableCountLabel');
+      if (!tbody || !emptyState || !countLabel) return;
+
+      const sorted = getSortedOrders(filteredOrders);
+      countLabel.textContent = `Showing ${sorted.length} of ${ORDERS_DATA.length} entries`;
+
+      tbody.innerHTML = '';
+      if (sorted.length === 0) {
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      emptyState.classList.add('hidden');
+
+      sorted.forEach((order) => {
+        const tr = document.createElement('tr');
+        tr.className = 'transition hover:bg-lake-50/40';
+        tr.innerHTML = `
+          <td class="whitespace-nowrap px-4 py-3.5 text-xs font-medium text-slate-700">${order.dateLabel}</td>
+          <td class="whitespace-nowrap px-4 py-3.5">
+            <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${getRetailerBadgeClass(order.retailer)}">
+              ${order.retailer}
+            </span>
+          </td>
+          <td class="whitespace-nowrap px-4 py-3.5 font-mono text-xs font-medium text-slate-700">${order.orderId}</td>
+          <td class="px-4 py-3.5 text-xs leading-relaxed text-slate-600 sm:text-sm">${order.items}</td>
+          <td class="whitespace-nowrap px-4 py-3.5 text-right text-sm font-bold text-slate-900">${formatUSD(order.amount)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Update sort header indicators
+      document.querySelectorAll('.sortable-th').forEach((th) => {
+        const key = th.getAttribute('data-sort');
+        const indicator = th.querySelector('.sort-indicator');
+        if (key === state.sortKey) {
+          th.classList.add('active-sort');
+          if (indicator) indicator.textContent = state.sortAsc ? '↑' : '↓';
+        } else {
+          th.classList.remove('active-sort');
+          if (indicator) indicator.textContent = '↕';
+        }
+      });
+    }
+
+    function updateAll() {
+      const filtered = getFilteredOrders();
+      renderFilterButtons();
+      renderKPIs(filtered);
+      renderRetailerBreakdown();
+      renderChart(filtered);
+      renderLureTypeBreakdown(filtered);
+      renderTable(filtered);
+    }
+
+    function buildFriendSummaryText() {
+      return [
+        '12-Month Fishing Tackle & Lure Spend (Dec 8, 2025 – Oct 29, 2026)',
+        'Total: $945.19 across 20 orders/visits',
+        '• Walmart: $284.22 (5 orders)',
+        '• Bass Pro Shops: $268.26 (7 orders/visits)',
+        '• Tackle Warehouse: $220.29 (4 orders)',
+        '• Z-Man Fishing Products: $59.84 (1 order)',
+        '• FishUSA: $59.27 (1 order)',
+        '• Amazon: $53.31 (2 orders)'
+      ].join('\n');
+    }
+
+    function initEvents() {
+      const searchInput = document.getElementById('orderSearchInput');
+      if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+          state.searchQuery = e.target.value || '';
+          updateAll();
+        });
+      }
+
+      document.querySelectorAll('.sortable-th').forEach((th) => {
+        th.addEventListener('click', () => {
+          const key = th.getAttribute('data-sort');
+          if (!key) return;
+          if (state.sortKey === key) {
+            state.sortAsc = !state.sortAsc;
+          } else {
+            state.sortKey = key;
+            state.sortAsc = key === 'amount' ? false : true;
+          }
+          renderTable(getFilteredOrders());
+        });
+      });
+
+      const modeRetailerBtn = document.getElementById('modeRetailerBtn');
+      const modeTimelineBtn = document.getElementById('modeTimelineBtn');
+
+      if (modeRetailerBtn && modeTimelineBtn) {
+        modeRetailerBtn.addEventListener('click', () => {
+          state.chartMode = 'retailer';
+          modeRetailerBtn.className = 'rounded-lg bg-white px-3 py-1.5 text-lake-800 shadow-sm transition';
+          modeTimelineBtn.className = 'rounded-lg px-3 py-1.5 text-slate-600 transition hover:text-slate-900';
+          renderChart(getFilteredOrders());
+        });
+
+        modeTimelineBtn.addEventListener('click', () => {
+          state.chartMode = 'timeline';
+          modeTimelineBtn.className = 'rounded-lg bg-white px-3 py-1.5 text-lake-800 shadow-sm transition';
+          modeRetailerBtn.className = 'rounded-lg px-3 py-1.5 text-slate-600 transition hover:text-slate-900';
+          renderChart(getFilteredOrders());
+        });
+      }
+
+      const lureDoughnutBtn = document.getElementById('lureModeDoughnutBtn');
+      const lureBarBtn = document.getElementById('lureModeBarBtn');
+
+      if (lureDoughnutBtn && lureBarBtn) {
+        lureDoughnutBtn.addEventListener('click', () => {
+          state.lureChartMode = 'doughnut';
+          lureDoughnutBtn.className = 'rounded-lg bg-white px-3 py-1.5 text-lake-800 shadow-sm transition';
+          lureBarBtn.className = 'rounded-lg px-3 py-1.5 text-slate-600 transition hover:text-slate-900';
+          renderLureTypeBreakdown(getFilteredOrders());
+        });
+
+        lureBarBtn.addEventListener('click', () => {
+          state.lureChartMode = 'bar';
+          lureBarBtn.className = 'rounded-lg bg-white px-3 py-1.5 text-lake-800 shadow-sm transition';
+          lureDoughnutBtn.className = 'rounded-lg px-3 py-1.5 text-slate-600 transition hover:text-slate-900';
+          renderLureTypeBreakdown(getFilteredOrders());
+        });
+      }
+
+      const resetBtn = document.getElementById('resetFiltersBtn');
+      if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+          state.selectedRetailer = 'ALL';
+          state.selectedLureCategory = 'ALL';
+          state.searchQuery = '';
+          state.sortKey = 'date';
+          state.sortAsc = true;
+          if (searchInput) searchInput.value = '';
+          updateAll();
+          showBanner('Filters and sort order reset to default.');
+        });
+      }
+
+      const copyBtn = document.getElementById('copySummaryBtn');
+      if (copyBtn) {
+        copyBtn.addEventListener('click', () => {
+          const summaryText = buildFriendSummaryText();
+          const helper = document.createElement('textarea');
+          helper.value = summaryText;
+          helper.setAttribute('readonly', '');
+          helper.style.position = 'absolute';
+          helper.style.left = '-9999px';
+          document.body.appendChild(helper);
+          helper.select();
+          try {
+            document.execCommand('copy');
+            showBanner('Copied shareable tackle summary to clipboard!');
+          } catch (err) {
+            showBanner('Could not copy automatically—select and copy the summary text directly.');
+          }
+          document.body.removeChild(helper);
+        });
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initEvents();
+      updateAll();
+    });
+  </script>
+</body>
+</html>
